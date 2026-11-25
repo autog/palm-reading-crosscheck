@@ -66,16 +66,19 @@ Many traditions read **how deep a line is**, not only where it runs. So before r
 **Photo quality limits how far to trust the result.** The best photo is the original camera file (not a compressed messaging-app copy), with the hand flat and in focus, lit from one side at a low angle so the creases cast shadows, and no flash. The life line on the curved thumb pad often reads fainter under flat front light, so ask for a second photo lit from the little-finger side before calling it faint.
 
 **Procedure.** Do this for every line you will rate:
-1. Trace the line as in 8c (points from its start, in image pixels). Name the major lines `life`, `heart`, `head` and `fate` so the script can use them as the reference.
-2. Give each line its age scale from the tradition being used, e.g. life `[10, 80]`. Leave `ages` out for lines with no scale.
-3. Run `python3 scripts/line_depth.py IMAGE lines.json OUTDIR`. The script:
-   - snaps each trace onto the actual crease (within ±10 px)
-   - takes a cross-section every pixel along the line and measures its darkness and width
-   - masks crossings with other traced lines, and the first and last 4% of each line, because both look falsely deep
-   - classifies every stretch as **deep** (>1.5), **normal** (0.65–1.5), **faint** (0.3–0.65) or **gap?** (<0.3), with ages
-   - flags two-strand cross-sections that persist along the line (**island** candidates)
-   - writes `summary.json`, `samples.csv`, `line_strips.png` (each line straightened and zoomed, with a depth graph and ages) and `zoom_<line>.png` (3× colour close-ups along each line)
-4. **Read the warnings first.** If too few cross-sections have their darkest point on the path, either the trace is off or the line really is faint in this photo. Re-trace using the tile coordinates and run again. If it still warns, say the line is faint or unclear in this photo, don't date anything on it, and ask for a side-lit original photo.
+1. Trace the line as in 8c (points from its start, in image pixels). Treat the life, heart, head and fate lines as the palm's reference lines.
+2. Give each line its age scale from the tradition being used, e.g. life 10 at the start to 80 at the wrist.
+3. **Measure the line with your own short image-analysis code**, using whatever Python imaging tools are already available. The method:
+   - **Darkness map:** relative darkness = (heavily blurred grayscale minus lightly blurred grayscale) ÷ the heavily blurred grayscale. This removes uneven lighting.
+   - **Snap to the crease:** move each trace point to the darkest spot within about ±10 px across the line, then smooth the path.
+   - **Measure along the line:** about every pixel, take a cross-section and record its peak darkness (depth) and the width where it stays above half the peak (width).
+   - **Mask false readings:** skip points where another traced line crosses, and the first and last 4% of each line. Fill them from their neighbours.
+   - **Normalise:** divide by the median depth of the reference lines, so that 1.0 = typical for this palm.
+   - **Classify** each smoothed stretch as **deep** (>1.5), **normal** (0.65–1.5), **faint** (0.3–0.65) or **gap?** (<0.3), and give it ages from the line's scale.
+   - **Islands:** flag places where two separate dark strands run side by side across several consecutive cross-sections.
+   - **Trend:** compare the average depth of the first and last thirds: below 0.7× is thinning, above 1.4× is thickening.
+   - **Visual check:** make a straightened, zoomed strip of each line with a depth graph and ages underneath, plus 3× colour close-up tiles along the line, each labelled with its age, class and pixel position.
+4. **Check how reliable the trace is first.** If fewer than about 60% of cross-sections have their darkest point on the smoothed path, either the trace is off or the line really is faint in this photo. Re-trace and measure again. If it's still unreliable, say the line is faint or unclear in this photo, don't date anything on it, and ask for a side-lit original photo.
 5. **Check every flagged stretch by eye** on its zoom tile, in colour: each gap?, deep stretch, island and thinning point. Keep only what the tile shows; mark everything else Can't confirm.
 6. **Translate the confirmed depth pattern** using the tradition's rules, with ages, and rate it.
 
@@ -93,19 +96,21 @@ Many traditions read **how deep a line is**, not only where it runs. So before r
 
 ## 4. Teaching videos
 
-Audio transcription is often unavailable. Don't install anything. Match what the teacher **draws** to what they **say** with `scripts/video_sync.py`:
+Audio transcription is often unavailable. Use only the tools already available in the session. Match what the teacher **draws** to what they **say**:
 
 1. **Check for repeats first:** `cmp` new videos and transcripts against earlier uploads.
-2. **Mark the mount map once per video.** Run the script with an empty `{}` regions file. It writes `final_grid.png`, the last frame with a grid on it. Read off a box for each area (Legend, Jupiter, Saturn, Sun, Mercury, Outer Mars, Inner Mars, Moon, Venus, Rahu, Ketu, or whatever areas the tradition uses) and save them to `regions.json`. Check which hand the demo palm is, then open `regions_check.png` to make sure the boxes sit where the teacher draws.
-3. **Run it again with the regions.** The script:
-   - samples a frame every 2 s (`--every 1` for short clips)
-   - finds new chalk-like strokes and erasures
-   - groups strokes in the same area into drawing episodes
-   - looks for each area's keywords in the speech from 40 s before to 10 s after each episode
-   - If the teacher draws in dark ink as well as white, count near-black pixels (max channel < 60) as ink too, and drop the `binary_opening` filter so thin strokes survive.
+2. **Map the areas once per video.** Take the video's last frame, which usually carries every annotation, and draw a labelled grid over it. Read off a box for each area: the teacher's legend, Jupiter, Saturn, Sun, Mercury, Outer Mars, Inner Mars, Moon, Venus, Rahu, Ketu, or whatever areas the tradition uses. Check which hand the demo palm is, and draw the boxes back on the frame to make sure they sit where the teacher draws.
+3. **Find the drawing episodes** with your own short code:
+   - Pull a frame every 2 s (every 1 s for short clips) with whatever video tool is available.
+   - Mark ink pixels: near-white, low-saturation pixels for chalk, plus near-black pixels if the teacher also draws in dark ink. Keep strokes 1–2 px wide.
+   - Keep a running mask, so each new stroke counts once. Track erasures as large blocks of ink that disappear. Ignore blobs under about 40–80 px, which are usually the mouse cursor or compression specks.
+   - Group strokes in the same area less than 12 s apart into one episode, and assign each episode to the box containing its centre.
+   - Split the transcript into sentences and estimate each one's time within its timestamped block.
+   - Look for the area's keywords in the speech from 40 s before to 10 s after each episode, because teachers often name an area before drawing on it.
+   - Make a review sheet: each episode's new strokes in red on its frame, beside the matched speech.
 4. **Read each episode's confidence:**
    - **drawn + said:** high confidence; use it as a rule
-   - **drawn only:** check it by eye in `review.jpg`
+   - **drawn only:** check it by eye on the review sheet
    - **unmapped:** check it by eye
    - **said only:** medium confidence; label it "from transcript only"
 5. Keep a rule only where the picture and the words agree, and record which kind of source it came from.
@@ -239,25 +244,28 @@ The scorecard groups the rated features into life areas, so the user sees a scor
 
 **Rules**
 - Each feature row from the Reading sheet goes into **one** area, the one it most affects. Don't count a feature twice to push an area up or down.
-- Use the **same rating** as the sheet. An area's score is the average of its scored features. The script calculates it, so the image always matches the sheet.
+- Use the **same rating** as the sheet. An area's score is the average of its scored features (Excellent 4, Good 3, Average 2, Bad 1). Work it out from the sheet's ratings in code, not by hand, so the image always matches the sheet.
 - Write each "why" in one plain sentence: what was seen (with an age, if there is one) and what it means in this tradition. Say "plausible" or "in this photo" where the depth check or zoom tile wasn't conclusive.
 - Features that need a photo, touch or transcript are listed in grey as "Not rated" and aren't scored. Their area shows "x of y features scored", so a high score from one feature is visible as thin evidence.
 - Health, lifespan and relationship items keep the "in this tradition" wording. Never put a death or partner-death reading on the scorecard; leave it in the sheet, phrased carefully.
 - The "In short" summary names the strongest and weakest areas, says why, and says what is still unscored.
 
-**Render it.** Write a `scorecard.json` (format in the script's docstring), then run:
+**Render it** with Pillow (DejaVu fonts at `/usr/share/fonts/truetype/dejavu/`), as one portrait image about 2400 px wide, on a dark background (around `#12141C`, with cards around `#1E212D`). The README shows an example. Lay it out from top to bottom:
+- **Header:** the title, the person and hand, the date, and which tradition was used
+- **Overall gauge:** a 270° arc filled to the overall score out of 4 in its band colour, with the score in large type and the band name under it
+- **Colour key:** Excellent / Good / Average / Bad, with their points, plus "Grey = needs a better photo, touch or transcript (not scored)"
+- **Radar chart:** one axis per area, rings at 1–4, a translucent filled polygon, and a dot in the band colour at each area's score
+- **Area cards,** two per row. Each card has:
+  - a stripe on its left edge in the band colour
+  - the area name and its score ("2.7 / 4")
+  - a band chip and "x of y features scored"
+  - a score bar
+  - one line per feature: a rating-coloured dot, **"Feature — Rating:"** in bold, then the reason in lighter text, wrapped within the card
+- **"In short":** the summary
+- **Disclaimer:** the required disclaimer in a highlighted box (amber border, dark amber fill)
+- **Footer:** a line explaining that each area's score is the average of its rated features, and that palmistry is a tradition, not evidence
 
-```
-python3 scripts/render_scorecard.py scorecard.json scorecard.jpg
-```
-
-The script draws:
-- an overall gauge
-- a radar chart of the areas
-- a colour key
-- one card per area, with its score, band, a bar, "x of y features scored", and each feature's rating dot, rating and reason
-- the summary
-- the required disclaimer, in a highlighted box
+Band thresholds: ≥3.5 Excellent, ≥2.75 Good, ≥1.75 Average, otherwise Bad. Use the rating colours from 8a, and grey for features that aren't scored.
 
 **View the image before sending it.** Check that no text is cut off or overlapping and that the scores match the sheet. Then send it together with the annotated palm image.
 

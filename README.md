@@ -30,7 +30,7 @@ Ask Claude something like "read my palm" and attach photos. For the best results
 
 ## What it runs
 
-The skill includes two Python scripts, `scripts/line_depth.py` and `scripts/video_sync.py`. Claude runs them locally on the images and videos you provide. They use Pillow, NumPy and SciPy, plus `ffmpeg` and `ffprobe` for video. The plugin doesn't send your photos or data anywhere, doesn't fetch anything from the network, has no hooks or MCP servers, and doesn't change any settings.
+The plugin is a single skill made of Markdown instructions; it contains no scripts or programs. When you share photos or videos, Claude analyses them in its own session with the tools it already has. That includes measuring how deep each palm line is and drawing the annotated image and scorecard. The plugin doesn't send your photos or data anywhere, doesn't fetch anything from the network, has no hooks or MCP servers, and doesn't change any settings.
 
 ## Privacy
 
