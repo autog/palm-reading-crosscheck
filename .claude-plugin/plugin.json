@@ -1,7 +1,7 @@
 {
   "name": "palm-reading-crosscheck",
   "displayName": "Palm Reading Cross-check",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Read palm photos in the palmistry tradition you choose, measure line depth along every line, and check paid or third-party palm readings against what the photos actually show.",
   "author": {
     "name": "Vinoth"

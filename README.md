@@ -18,7 +18,7 @@ A Claude plugin that reads palm photos in the palmistry tradition you choose, an
 
 The scorecard rates six life areas: Life & Vitality, Career & Success, Money & Business, Emotions & Love, Mind & Decisions, and Spiritual & Intuition. Each card shows the area's score, the features behind it, and one line explaining each rating. The example below uses sample data, not a real reading.
 
-![Sample life-area scorecard](assets/sample-scorecard.jpg)
+![Sample life-area scorecard](https://raw.githubusercontent.com/autog/palm-reading-crosscheck/readme-assets/img/sample-scorecard.jpg)
 
 ## How to use it
 
