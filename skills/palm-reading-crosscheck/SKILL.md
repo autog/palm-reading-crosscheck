@@ -204,8 +204,8 @@ Leave the rating blank for anything that still needs a photo, touch or a transcr
 - **Reading** sheet columns: Hand | Feature | Verdict | Rating | Depth | Tradition's reading | What I see | Notes. Make Verdict and Rating colour-coded dropdowns, freeze row 1, and wrap the long text columns.
 - **Score** sheet:
   - rows Excellent / Good / Average / Bad, with Points 4 / 3 / 2 / 1
-  - columns Right hand | Left hand | All, using `COUNTIFS(Reading!$A$2:$A$200,"Right",Reading!$D$2:$D$200,$A2)`
-  - a "Score (out of 4)" footer: `=ROUND(SUMPRODUCT($B$2:$B$5,C2:C5)/SUM(C2:C5),2)`
+  - columns Right hand | Left hand | All, using `COUNTIFS(Reading!$A:$A,"Right",Reading!$D:$D,$A2)` (and `COUNTIF(Reading!$D:$D,$A2)` for All)
+  - a "Score (out of 4)" footer: `=ROUND(SUMPRODUCT($B2:$B5,C2:C5)/SUM(C2:C5),2)`
   - a "Score %" footer
   - a note that starts with the required disclaimer, then explains the scale and that palmistry is a tradition
 - Read the formulas back to check their values before reporting scores.
